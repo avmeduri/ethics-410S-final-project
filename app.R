@@ -1,5 +1,7 @@
 library(shiny)
 library(shinydashboard)
+library(MASS)
+library(broom)
 library(ggplot2)
 library(plotly)
 library(dplyr)
@@ -122,6 +124,7 @@ ui <- dashboardPage(
       menuItem("What Gets Covered?",       tabName = "coverage",  icon = icon("newspaper")),
       menuItem("Geography of Visibility",  tabName = "geography", icon = icon("globe-americas")),
       menuItem("Coverage Over Time",       tabName = "time",      icon = icon("clock")),
+      menuItem("Extended Analysis",         tabName = "extended",  icon = icon("flask")),
       menuItem("About the Data",           tabName = "about",     icon = icon("info-circle"))
     )
   ),
@@ -244,16 +247,16 @@ ui <- dashboardPage(
             width = 12, status = "primary",
             tags$div(style = "line-height: 1.8; font-size: 0.93em; color: #333;",
               tags$p(tags$strong("Legibility (Scott): "),
-                "In Chapter 1 of Seeing Like a State, Scott uses the parable of scientific forestry to show how ",
-                "institutions reduce complex realities to simplified, measurable categories. The Prussian state saw ",
-                "forests only as commercial timber yields and missed the grasses, lichens, fauna, and the social uses ",
-                "that local populations depended on. What fell outside the state’s ‘fiscal lens’ became invisible. ",
-                "The CCC vs. ACLED Comparison tab shows a parallel pattern: during their overlapping coverage period, ",
-                "the CCC records over 126% more protest events than ACLED in 311 of 323 weeks. ACLED is the dataset ",
-                "that researchers and policymakers use to inform decisions about political events. The persistent gap ",
-                "between these two records suggests that the coding criteria and methodological choices that make ACLED ",
-                "reliable for its intended purposes also cause it to miss a large share of protest activity, ",
-                "much as Scott’s fiscal forestry missed everything that could not be converted into revenue estimates."),
+                "Scott argues that institutions make complex realities governable by imposing ", tags$em("legibility schemes"),
+                "—simplified, standardized categories that render a phenomenon measurable and manipulable. ",
+                "This process requires what he calls a ", tags$em("narrowing of vision"),
+                ": the scheme brings certain features into sharp focus while everything outside its frame becomes invisible. ",
+                "The CCC vs. ACLED Comparison tab shows a pattern consistent with this framework: during their overlapping ",
+                "coverage period, the CCC records over 126% more protest events than ACLED in 311 of 323 weeks. ACLED is ",
+                "the dataset that researchers and policymakers use to inform decisions about political events. Its coding ",
+                "criteria function as a legibility scheme—they determine which protests enter institutional records and ",
+                "which do not. The persistent gap suggests that the methodological choices that make ACLED reliable for its ",
+                "purposes also produce systematic blind spots, excluding protests that do not meet its threshold criteria."),
               tags$p(tags$strong("Organizational Resources (Almeida, Lune): "),
                 "Almeida argues that social movements are more likely to emerge from preexisting organizations because ",
                 "these provide recognized leaders, communication channels, and the capacity for bloc recruitment, ",
@@ -355,6 +358,7 @@ ui <- dashboardPage(
                 "Average Media Sources by Event Type (Top 10)" = "trait_type",
                 "Media Coverage: Arrests and Property Damage" = "trait_arrest_damage",
                 "Media Coverage: Organizations" = "trait_orgs",
+                "Do Organizations Boost Coverage Differently by Issue?" = "org_issue_interaction",
                 "Does Repression Amplify Visibility?" = "repression",
                 "Media Coverage by Protest Valence" = "valence",
                 "Does Protest Size Drive Coverage?" = "size_coverage",
@@ -493,6 +497,19 @@ ui <- dashboardPage(
                 "among those with at least 50 recorded events.",
                 style = desc_style),
               withSpinner(plotlyOutput("trait_org_top_plot", height = "380px"), type = 6, color = "#2980b9")
+            )
+          )
+        ),
+        conditionalPanel(
+          condition = "input.coverage_chart == 'org_issue_interaction'",
+          fluidRow(
+            box(
+              title = "Do Organizations Boost Coverage Differently by Issue?",
+              status = "primary", solidHeader = TRUE, width = 12,
+              p("Average media sources for organized vs. unorganized events, broken down by issue category (top 10 by event count). ",
+                "Issues where the gap is largest suggest organizational resources amplify visibility more in those areas.",
+                style = desc_style),
+              withSpinner(plotlyOutput("org_issue_interaction_plot", height = "480px"), type = 6, color = "#2980b9")
             )
           )
         ),
@@ -673,6 +690,67 @@ ui <- dashboardPage(
         )
       ),
 
+      tabItem(tabName = "extended",
+        fluidRow(
+          column(6,
+            selectInput("extended_chart", "Select Analysis:",
+              choices = c(
+                "What Predicts Media Coverage? (Regression Model)" = "regression",
+                "Which Keywords in Claims Drive Coverage?" = "keywords"
+              ),
+              selected = "regression",
+              width = "100%"
+            )
+          )
+        ),
+        conditionalPanel(
+          condition = "input.extended_chart == 'regression'",
+          fluidRow(
+            box(
+              title = "Regression Model: Predictors of Media Coverage",
+              status = "primary", solidHeader = TRUE, width = 12,
+              p("A negative binomial regression modeling media source count from issue category, ",
+                "organizational presence, arrests, property damage, protest size, political valence, and urban/rural setting. ",
+                "Negative binomial is appropriate because media coverage is count data with overdispersion (variance exceeds the mean). ",
+                "Results are shown as incidence rate ratios (IRRs): values above 1 mean more coverage, below 1 mean less. ",
+                "For example, an IRR of 2.0 means events with that characteristic receive twice as many media sources. ",
+                "Blue points are statistically significant (p < 0.05); gray points are not.",
+                style = desc_style),
+              withSpinner(plotlyOutput("regression_coef_plot", height = "520px"), type = 6, color = "#2980b9")
+            )
+          ),
+          fluidRow(class = "equal-height",
+            box(
+              title = "Model Summary",
+              status = "primary", solidHeader = TRUE, width = 6,
+              withSpinner(uiOutput("regression_summary"), type = 6, color = "#2980b9")
+            ),
+            box(
+              title = "Residuals vs Fitted Values",
+              status = "primary", solidHeader = TRUE, width = 6,
+              p("Diagnostic plot showing model residuals against fitted values. A well-fitting model shows ",
+                "no strong pattern in the residuals.",
+                style = desc_style),
+              withSpinner(plotlyOutput("regression_residual_plot", height = "350px"), type = 6, color = "#2980b9")
+            )
+          )
+        ),
+        conditionalPanel(
+          condition = "input.extended_chart == 'keywords'",
+          fluidRow(
+            box(
+              title = "Which Keywords in Protest Claims Drive Media Coverage?",
+              status = "primary", solidHeader = TRUE, width = 12,
+              p("Each keyword is extracted from protest claims by splitting claim text into individual words and removing common stop words. ",
+                "The bar shows how much higher or lower the average media coverage is for events mentioning that keyword compared to the overall average. ",
+                "Keywords appearing in at least 300 events are included.",
+                style = desc_style),
+              withSpinner(plotlyOutput("keyword_coverage_plot", height = "560px"), type = 6, color = "#2980b9")
+            )
+          )
+        )
+      ),
+
       tabItem(tabName = "about",
         fluidRow(
           box(
@@ -760,7 +838,7 @@ ui <- dashboardPage(
                       "An event covered by one national outlet (e.g., the New York Times) and an event covered by one local ",
                       "newspaper both register as n_sources = 1, despite very different audience sizes."),
               tags$li(tags$strong("Protest size data: "), "Approximately 66% of events have no recorded protest size ",
-                      "(size_cat = 0). The protest size vs. coverage chart is based on the roughly one-third of events ",
+                      "(", tags$code("size_cat = 0"), "). The protest size vs. coverage chart is based on the roughly one-third of events ",
                       "where size was reported, which may skew toward larger or more visible events."),
               tags$li(tags$strong("Organization data: "), "About 28% of events have no organization listed. ",
                       "The organized vs. unorganized comparison treats missing organization data as unorganized, ",
@@ -826,7 +904,9 @@ server <- function(input, output, session) {
     if (!is.null(CCC_DATA) && nrow(CCC_DATA) > 0) {
       updateDateRangeInput(session, "date_range",
                           start = min(CCC_DATA$date, na.rm = TRUE),
-                          end   = max(CCC_DATA$date, na.rm = TRUE))
+                          end   = max(CCC_DATA$date, na.rm = TRUE),
+                          min   = min(CCC_DATA$date, na.rm = TRUE),
+                          max   = max(CCC_DATA$date, na.rm = TRUE))
 
       issue_choices <- sort(unique(CCC_DATA$main_issue[!is.na(CCC_DATA$main_issue)]))
       updateSelectInput(session, "issues",
@@ -974,13 +1054,14 @@ server <- function(input, output, session) {
 
   output$gap_summary <- renderText({
     gd <- gap_data
-    req(gd)
+    req(gd, nrow(gd) > 0)
     overlap <- gd |> dplyr::filter(ccc_events > 0, acled_protests > 0)
+    req(nrow(overlap) > 0)
     total_ccc   <- sum(gd$ccc_events, na.rm = TRUE)
     total_acled <- sum(gd$acled_protests, na.rm = TRUE)
     weeks_ccc_more  <- sum(gd$diff > 0, na.rm = TRUE)
     weeks_acled_more <- sum(gd$diff < 0, na.rm = TRUE)
-    pct_more <- round((total_ccc - total_acled)/total_acled * 100, 1)
+    pct_more <- if (total_acled > 0) round((total_ccc - total_acled)/total_acled * 100, 1) else 0
 
     paste0(
       "Overlapping period: ", format(min(overlap$week), "%b %Y"),
@@ -998,7 +1079,7 @@ server <- function(input, output, session) {
 
   output$protest_map <- renderLeaflet({
     d <- filtered_data()
-    req(d)
+    req(d, nrow(d) > 0)
     coords <- d |> dplyr::filter(!is.na(lat), !is.na(lon))
     if (nrow(coords) > 10000) {
       set.seed(42)
@@ -1188,6 +1269,46 @@ server <- function(input, output, session) {
     to_plotly(p) |> plotly::layout(margin = list(l = 250))
   })
 
+  output$org_issue_interaction_plot <- renderPlotly({
+    d <- filtered_data(); req(d, nrow(d) > 0)
+
+    top_issues <- d |>
+      dplyr::count(main_issue, sort = TRUE) |>
+      head(10) |>
+      dplyr::pull(main_issue)
+
+    interaction_data <- d |>
+      dplyr::filter(main_issue %in% top_issues) |>
+      dplyr::mutate(has_org = ifelse(organizations != "" & !is.na(organizations),
+                                     "Organized", "Unorganized")) |>
+      dplyr::group_by(main_issue, has_org) |>
+      dplyr::summarise(mean_sources = mean(n_sources, na.rm = TRUE),
+                       n = n(), .groups = "drop")
+
+    org_means <- interaction_data |>
+      tidyr::pivot_wider(names_from = has_org, values_from = c(mean_sources, n))
+    if (!("mean_sources_Organized" %in% names(org_means))) return(NULL)
+    if (!("mean_sources_Unorganized" %in% names(org_means))) return(NULL)
+    org_means <- org_means |>
+      dplyr::mutate(gap = mean_sources_Organized - mean_sources_Unorganized)
+
+    issue_order <- org_means |> dplyr::arrange(gap) |> dplyr::pull(main_issue)
+    interaction_data$main_issue <- factor(interaction_data$main_issue, levels = issue_order)
+
+    p <- ggplot(interaction_data,
+                aes(x = main_issue, y = mean_sources, fill = has_org,
+                    text = paste0(main_issue,
+                                  "\n", has_org,
+                                  "\nMean sources: ", round(mean_sources, 2),
+                                  "\nEvents: ", scales::comma(n)))) +
+      geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+      scale_fill_manual(values = c("Organized" = COL$blue, "Unorganized" = "#bdc3c7")) +
+      coord_flip() +
+      labs(x = NULL, y = "Average Media Sources per Event", fill = NULL) +
+      plot_theme(base_size = 11) +
+      theme(legend.position = "top")
+    to_plotly(p)
+  })
 
   output$repression_plot <- renderPlotly({
     d <- filtered_data(); req(d, nrow(d) > 0)
@@ -1337,21 +1458,29 @@ server <- function(input, output, session) {
         hoverlabel = list(bgcolor = "white", font = list(size = 12)),
         plot_bgcolor = "white", paper_bgcolor = "white",
         margin = list(r = 60),
-        annotations = list(
-          list(x = 1, y = dist$cum_pct[dist$n_sources == 1],
-               xref = "x", yref = "y2",
-               text = paste0(dist$pct[dist$n_sources == 1], "% of all protests<br>have just 1 source"),
-               showarrow = TRUE, arrowhead = 2, ax = 80, ay = 30,
-               font = list(size = 11, color = COL$dark),
-               bgcolor = "rgba(255,255,255,0.9)", borderpad = 4),
-          list(x = 4, y = dist$cum_pct[dist$n_sources == 4],
-               xref = "x", yref = "y2",
-               text = paste0("Only ", round(100 - dist$cum_pct[dist$n_sources == 4], 1),
-                             "% get 5+ sources"),
-               showarrow = TRUE, arrowhead = 2, ax = 100, ay = 40,
-               font = list(size = 11, color = COL$dark),
-               bgcolor = "rgba(255,255,255,0.9)", borderpad = 4)
-        )
+        annotations = {
+          ann <- list()
+          if (1 %in% dist$n_sources) {
+            ann <- c(ann, list(list(
+              x = 1, y = dist$cum_pct[dist$n_sources == 1],
+              xref = "x", yref = "y2",
+              text = paste0(dist$pct[dist$n_sources == 1], "% of all protests<br>have just 1 source"),
+              showarrow = TRUE, arrowhead = 2, ax = 80, ay = 30,
+              font = list(size = 11, color = COL$dark),
+              bgcolor = "rgba(255,255,255,0.9)", borderpad = 4)))
+          }
+          if (4 %in% dist$n_sources) {
+            ann <- c(ann, list(list(
+              x = 4, y = dist$cum_pct[dist$n_sources == 4],
+              xref = "x", yref = "y2",
+              text = paste0("Only ", round(100 - dist$cum_pct[dist$n_sources == 4], 1),
+                            "% get 5+ sources"),
+              showarrow = TRUE, arrowhead = 2, ax = 100, ay = 40,
+              font = list(size = 11, color = COL$dark),
+              bgcolor = "rgba(255,255,255,0.9)", borderpad = 4)))
+          }
+          ann
+        }
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
@@ -1856,21 +1985,25 @@ server <- function(input, output, session) {
   })
 
   output$vb_arrests_effect <- renderValueBox({
-    if (!is.null(CCC_DATA)) {
+    if (!is.null(CCC_DATA) && nrow(CCC_DATA) > 0) {
       arr_yes <- mean(CCC_DATA$n_sources[CCC_DATA$arrests == 1], na.rm = TRUE)
       arr_no <- mean(CCC_DATA$n_sources[CCC_DATA$arrests == 0], na.rm = TRUE)
-      valueBox(paste0(round(arr_yes/arr_no, 1), "x"), "Coverage Multiplier: Arrests",
-               icon = icon("gavel"), color = "red")
+      if (!is.na(arr_no) && arr_no > 0 && !is.na(arr_yes)) {
+        valueBox(paste0(round(arr_yes/arr_no, 1), "x"), "Coverage Multiplier: Arrests",
+                 icon = icon("gavel"), color = "red")
+      } else valueBox("N/A", "Coverage Multiplier: Arrests", icon = icon("gavel"), color = "red")
     } else valueBox("N/A", "Coverage Multiplier: Arrests", icon = icon("gavel"), color = "red")
   })
 
   output$vb_org_effect <- renderValueBox({
-    if (!is.null(CCC_DATA)) {
+    if (!is.null(CCC_DATA) && nrow(CCC_DATA) > 0) {
       has_org <- CCC_DATA$organizations != "" & !is.na(CCC_DATA$organizations)
       org_yes <- mean(CCC_DATA$n_sources[has_org], na.rm = TRUE)
       org_no <- mean(CCC_DATA$n_sources[!has_org], na.rm = TRUE)
-      valueBox(paste0(round(org_yes/org_no, 1), "x"), "Coverage Multiplier: Organizations",
-               icon = icon("users"), color = "green")
+      if (!is.na(org_no) && org_no > 0 && !is.na(org_yes)) {
+        valueBox(paste0(round(org_yes/org_no, 1), "x"), "Coverage Multiplier: Organizations",
+                 icon = icon("users"), color = "green")
+      } else valueBox("N/A", "Coverage Multiplier: Organizations", icon = icon("users"), color = "green")
     } else valueBox("N/A", "Coverage Multiplier: Organizations", icon = icon("users"), color = "green")
   })
 
@@ -1900,7 +2033,7 @@ server <- function(input, output, session) {
     if (is.null(gap_data) || nrow(gap_data) == 0) return(p("Comparison data not loaded."))
     total_ccc <- sum(gap_data$ccc_events, na.rm = TRUE)
     total_acled <- sum(gap_data$acled_protests, na.rm = TRUE)
-    pct_more <- round((total_ccc - total_acled)/total_acled * 100, 1)
+    pct_more <- if (total_acled > 0) round((total_ccc - total_acled)/total_acled * 100, 1) else 0
     weeks_more <- sum(gap_data$diff > 0, na.rm = TRUE)
     total_weeks <- nrow(gap_data)
 
@@ -1973,6 +2106,234 @@ server <- function(input, output, session) {
         tags$li(strong("Organizations:"), " ", scales::comma(m$organizations))
       )
     }
+  })
+
+
+  regression_model <- reactiveVal(NULL)
+  regression_computed <- reactiveVal(FALSE)
+
+  observeEvent(input$active_tab, {
+    if (input$active_tab == "extended" && !regression_computed()) {
+      regression_computed(TRUE)
+      d <- CCC_DATA
+      if (is.null(d) || nrow(d) == 0) return()
+
+      model_data <- d |>
+        dplyr::mutate(
+          has_org = factor(ifelse(organizations != "" & !is.na(organizations), "Yes", "No")),
+          size_factor = factor(
+            dplyr::case_when(
+              is.na(size_cat) | size_cat == 0 ~ "Unknown",
+              size_cat == 1 ~ "Small",
+              size_cat == 2 ~ "Medium",
+              size_cat == 3 ~ "Large",
+              size_cat == 4 ~ "Very Large",
+              TRUE ~ "Unknown"
+            ),
+            levels = c("Unknown", "Small", "Medium", "Large", "Very Large")
+          ),
+          valence_label = factor(
+            dplyr::case_when(
+              valence == 0 ~ "Left",
+              valence == 1 ~ "Neutral",
+              valence == 2 ~ "Right",
+              TRUE ~ "Unknown"
+            ),
+            levels = c("Left", "Neutral", "Right", "Unknown")
+          ),
+          arrests_f = factor(ifelse(arrests == 1, "Yes", "No")),
+          damage_f = factor(ifelse(property_damage == 1, "Yes", "No")),
+          urban_f = factor(ifelse(urban, "Urban", "Rural"))
+        )
+
+      top_issues <- model_data |> dplyr::count(main_issue, sort = TRUE) |> head(8) |> dplyr::pull(main_issue)
+      model_data <- model_data |>
+        dplyr::mutate(issue_f = factor(ifelse(main_issue %in% top_issues, main_issue, "Other")))
+
+      result <- tryCatch(
+        MASS::glm.nb(n_sources ~ issue_f + has_org + arrests_f + damage_f + size_factor + valence_label + urban_f,
+                     data = model_data),
+        error = function(e) NULL
+      )
+      regression_model(result)
+    }
+  })
+
+  output$regression_coef_plot <- renderPlotly({
+    model <- regression_model(); req(model)
+
+    s <- summary(model)
+    coefs <- as.data.frame(coef(s))
+    coefs$term <- rownames(coefs)
+    names(coefs)[1:4] <- c("estimate", "std.error", "z_value", "p.value")
+    coefs <- coefs[coefs$term != "(Intercept)", ]
+    coefs$irr <- exp(coefs$estimate)
+    coefs$conf.low <- exp(coefs$estimate - 1.96 * coefs$std.error)
+    coefs$conf.high <- exp(coefs$estimate + 1.96 * coefs$std.error)
+
+    coefs <- coefs |>
+      dplyr::mutate(
+        term = gsub("^issue_f", "Issue: ", term),
+        term = gsub("^has_orgYes", "Has Organization", term),
+        term = gsub("^arrests_fYes", "Arrests Reported", term),
+        term = gsub("^damage_fYes", "Property Damage", term),
+        term = gsub("^size_factor", "Size: ", term),
+        term = gsub("^valence_label", "Valence: ", term),
+        term = gsub("^urban_fUrban", "Urban Setting", term),
+        significant = ifelse(p.value < 0.05, "p < 0.05", "Not significant"),
+        term = factor(term, levels = term[order(irr)])
+      )
+
+    p <- ggplot(coefs, aes(x = irr, y = term, color = significant,
+                            text = paste0(term,
+                                          "\nIRR: ", round(irr, 3),
+                                          "\n95% CI: [", round(conf.low, 3), ", ", round(conf.high, 3), "]",
+                                          "\np-value: ", formatC(p.value, format = "g", digits = 3)))) +
+      geom_vline(xintercept = 1, linetype = "dashed", color = "#7f8c8d") +
+      geom_point(size = 3) +
+      geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+      scale_color_manual(values = c("p < 0.05" = COL$blue, "Not significant" = "#bdc3c7")) +
+      labs(x = "Incidence Rate Ratio (IRR)", y = NULL, color = NULL) +
+      plot_theme(base_size = 11) +
+      theme(legend.position = "top")
+    to_plotly(p)
+  })
+
+  output$regression_summary <- renderUI({
+    model <- regression_model(); req(model)
+    g <- broom::glance(model)
+    cell <- "padding: 6px 12px; border-bottom: 1px solid #ddd;"
+    note_style <- "color: #666; font-size: 0.85em; font-weight: normal;"
+
+    make_row <- function(label, value, note = NULL) {
+      tags$tr(
+        tags$td(style = cell, tags$strong(label),
+                if (!is.null(note)) tags$br(tags$span(style = note_style, note))),
+        tags$td(style = cell, value)
+      )
+    }
+
+    tags$div(style = "font-size: 0.95em; line-height: 1.8;",
+      tags$table(style = "width: 100%; border-collapse: collapse;",
+        make_row("Model", "Negative Binomial (GLM)",
+                 "Appropriate for overdispersed count data"),
+        make_row("AIC", scales::comma(round(g$AIC, 1)),
+                 "Lower = better fit; useful for comparing models"),
+        make_row("Log-Likelihood", scales::comma(round(as.numeric(g$logLik), 1)),
+                 "Measures how well the model fits the observed data"),
+        make_row("Deviance", paste0(scales::comma(round(g$deviance, 1)),
+                                    " on ", scales::comma(g$df.residual), " df"),
+                 "Residual deviance near df suggests adequate fit"),
+        make_row("Observations", scales::comma(g$nobs))
+      ),
+      tags$p(style = "margin-top: 12px; color: #555; font-size: 0.9em;",
+        "Reference categories: most common issue, No Organization, No Arrests, No Property Damage, ",
+        "Unknown Size, Left Valence, Rural Setting. IRR > 1 means more coverage than the reference; IRR < 1 means less.")
+    )
+  })
+
+  output$regression_residual_plot <- renderPlotly({
+    model <- regression_model(); req(model)
+
+    diag_data <- broom::augment(model, type.residuals = "deviance") |>
+      dplyr::select(.fitted, .resid)
+
+    if (nrow(diag_data) > 5000) {
+      set.seed(42)
+      diag_data <- diag_data[sample(nrow(diag_data), 5000), ]
+    }
+
+    p <- ggplot(diag_data, aes(x = .fitted, y = .resid)) +
+      geom_point(alpha = 0.15, color = COL$blue, size = 1) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = COL$red) +
+      geom_smooth(method = "loess", se = FALSE, color = COL$dark, linewidth = 0.8) +
+      labs(x = "Fitted Values", y = "Deviance Residuals") +
+      plot_theme(base_size = 11)
+    to_plotly(p)
+  })
+
+
+  keyword_data <- reactiveVal(NULL)
+  keyword_computed <- reactiveVal(FALSE)
+
+  observeEvent(input$active_tab, {
+    if (input$active_tab == "extended" && !keyword_computed()) {
+      keyword_computed(TRUE)
+      d <- CCC_DATA
+      if (is.null(d) || nrow(d) == 0) return()
+
+      stop_words <- c("the", "and", "for", "that", "this", "with", "from", "are", "was",
+                       "were", "been", "have", "has", "had", "not", "but", "all", "can",
+                       "her", "his", "him", "she", "they", "them", "their", "its", "our",
+                       "who", "which", "what", "when", "where", "how", "will", "would",
+                       "could", "should", "may", "might", "shall", "must", "also", "just",
+                       "than", "then", "now", "here", "there", "very", "too", "more",
+                       "most", "some", "any", "each", "every", "both", "few", "many",
+                       "much", "such", "own", "other", "about", "into", "over", "after",
+                       "before", "between", "under", "again", "out", "off", "down", "only",
+                       "same", "being", "does", "did", "doing", "during", "through",
+                       "against", "above", "below", "while", "these", "those", "don",
+                       "you", "your", "yours", "get", "got", "let", "make", "made",
+                       "come", "came", "take", "took", "give", "gave", "say", "said",
+                       "see", "saw", "know", "knew", "think", "thought", "want", "use",
+                       "used", "new", "one", "two", "first", "last", "long", "great",
+                       "old", "right", "high", "end", "well", "way", "even", "back",
+                       "still", "going", "keep", "need", "call", "upon", "per", "pro",
+                       "anti", "non", "support", "oppose")
+
+      overall_mean <- mean(d$n_sources, na.rm = TRUE)
+
+      claims_events <- d |>
+        dplyr::filter(!is.na(claims_summary), claims_summary != "")
+      if (nrow(claims_events) < 100) return()
+
+      words_df <- claims_events |>
+        dplyr::select(event_id = 1, n_sources, claims_summary) |>
+        dplyr::mutate(claims_list = strsplit(tolower(claims_summary), ";")) |>
+        tidyr::unnest(claims_list) |>
+        dplyr::mutate(claims_list = trimws(claims_list)) |>
+        dplyr::mutate(words = strsplit(claims_list, "\\s+")) |>
+        tidyr::unnest(words) |>
+        dplyr::mutate(words = gsub("[^a-z]", "", words)) |>
+        dplyr::filter(nchar(words) >= 3, !(words %in% stop_words))
+
+      keyword_stats <- words_df |>
+        dplyr::group_by(words) |>
+        dplyr::summarise(
+          mean_sources = mean(n_sources, na.rm = TRUE),
+          n_events = dplyr::n_distinct(event_id),
+          .groups = "drop"
+        ) |>
+        dplyr::filter(n_events >= 300) |>
+        dplyr::mutate(boost = mean_sources - overall_mean) |>
+        dplyr::arrange(desc(abs(boost))) |>
+        head(25)
+
+      keyword_stats$direction <- ifelse(keyword_stats$boost >= 0, "Above Average", "Below Average")
+      keyword_stats$words <- factor(keyword_stats$words, levels = keyword_stats$words[order(keyword_stats$boost)])
+      keyword_data(list(stats = keyword_stats, overall_mean = overall_mean))
+    }
+  })
+
+  output$keyword_coverage_plot <- renderPlotly({
+    kd <- keyword_data(); req(kd)
+    keyword_stats <- kd$stats
+    overall_mean <- kd$overall_mean
+
+    p <- ggplot(keyword_stats,
+                aes(x = boost, y = words, fill = direction,
+                    text = paste0("Keyword: ", words,
+                                  "\nCoverage boost: ", ifelse(boost >= 0, "+", ""), round(boost, 3),
+                                  "\nMean sources: ", round(mean_sources, 2),
+                                  "\nOverall mean: ", round(overall_mean, 2),
+                                  "\nEvents with keyword: ", scales::comma(n_events)))) +
+      geom_col() +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "#333") +
+      scale_fill_manual(values = c("Above Average" = COL$blue, "Below Average" = COL$red)) +
+      labs(x = "Coverage Boost (vs. Overall Mean)", y = NULL, fill = NULL) +
+      plot_theme(base_size = 11) +
+      theme(legend.position = "top")
+    to_plotly(p)
   })
 }
 
