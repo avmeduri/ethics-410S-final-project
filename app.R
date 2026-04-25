@@ -105,11 +105,11 @@ filter_panel <- fluidRow(
 ui <- dashboardPage(
   skin = "blue",
   dashboardHeader(
-    title = tags$span(icon("bullhorn"), " Who Gets Heard?"),
+    title = tags$span(icon("bullhorn"), " U.S. Protest Media Coverage"),
     titleWidth = 280,
     tags$li(class = "dropdown",
       tags$a(href = "#", style = "padding: 10px 15px; color: white; font-size: 13px;",
-             icon("eye"), " Media Coverage & Protest Legibility")
+             icon("eye"), " Analyzing Media Visibility Across 138K+ Events")
     )
   ),
 

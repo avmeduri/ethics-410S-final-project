@@ -1,4 +1,4 @@
-# Documentation Memo: "Who Gets Heard?" Dashboard
+# Documentation Memo: U.S. Protest Media Coverage Dashboard
 
 ## Purpose
 
