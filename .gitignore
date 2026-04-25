@@ -1,0 +1,8 @@
+.DS_Store
+.Rhistory
+.claude/
+course-materials/
+
+# Data files (too large for GitHub, regenerate locally)
+data/prepared/
+data/raw/
