@@ -16,15 +16,9 @@ The **Crowd Counting Consortium (CCC)**, maintained by researchers at Harvard Ke
 ethics-410S-final-project/
 ├── app.R                            # Shiny dashboard (all UI + server logic)
 ├── documentation_memo.md
-├── data/
-│   ├── raw/
-│   │   ├── ccc/                     # CCC source CSVs (2017–2024)
-│   │   └── acled/                   # ACLED weekly aggregates
-│   └── prepared/                    # Preprocessed .rds files for the dashboard
+├── run_dashboard.sh                 # Launch script
 ├── R/                               # Data preparation scripts
-├── scripts/                         # Dependency installation + preprocessing
-├── course-materials/extracted/      # Project brief, rubric, resources
-└── www/                             # Static web assets
+└── scripts/                         # Dependency installation + preprocessing
 ```
 
 ## Dashboard Navigation
