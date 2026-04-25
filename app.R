@@ -105,8 +105,8 @@ filter_panel <- fluidRow(
 ui <- dashboardPage(
   skin = "blue",
   dashboardHeader(
-    title = tags$span(icon("bullhorn"), " U.S. Protest Media Coverage"),
-    titleWidth = 280,
+    title = tags$span(icon("bullhorn"), " U.S. Protest Media Coverage Dashboard"),
+    titleWidth = 400,
     tags$li(class = "dropdown",
       tags$a(href = "#", style = "padding: 10px 15px; color: white; font-size: 13px;",
              icon("eye"), " Analyzing Media Visibility Across 138K+ Events")
@@ -114,7 +114,7 @@ ui <- dashboardPage(
   ),
 
   dashboardSidebar(
-    width = 250,
+    width = 300,
     sidebarMenu(id = "active_tab",
       menuItem("Key Findings",             tabName = "findings",  icon = icon("lightbulb")),
       menuItem("CCC vs. ACLED Comparison", tabName = "gap",       icon = icon("chart-line")),
@@ -232,18 +232,57 @@ ui <- dashboardPage(
             uiOutput("findings_resources")
           ),
           box(
-            title = tags$span(icon("newspaper"), " Framing & Political Context"),
+            title = tags$span(icon("newspaper"), " Issues, Valence & Timing"),
             status = "primary", solidHeader = TRUE, width = 4,
             uiOutput("findings_framing")
           )
         ),
+        tags$h4("What These Patterns Suggest About Course Frameworks",
+          style = "margin: 15px 0 10px 15px; color: #2c3e50; font-weight: 600;"),
         fluidRow(
           box(
-            width = 12,
-            p(icon("arrow-right"), " Explore each tab in the sidebar for interactive visualizations with full detail.",
-              style = "text-align: center; color: #555; font-style: italic; margin: 0;")
+            width = 12, status = "primary",
+            tags$div(style = "line-height: 1.8; font-size: 0.93em; color: #333;",
+              tags$p(tags$strong("Legibility (Scott): "),
+                "In Chapter 1 of Seeing Like a State, Scott uses the parable of scientific forestry to show how ",
+                "institutions reduce complex realities to simplified, measurable categories. The Prussian state saw ",
+                "forests only as commercial timber yields and missed the grasses, lichens, fauna, and the social uses ",
+                "that local populations depended on. What fell outside the state’s ‘fiscal lens’ became invisible. ",
+                "The CCC vs. ACLED Comparison tab shows a parallel pattern: during their overlapping coverage period, ",
+                "the CCC records over 126% more protest events than ACLED in 311 of 323 weeks. ACLED is the dataset ",
+                "that researchers and policymakers use to inform decisions about political events. The persistent gap ",
+                "between these two records suggests that the coding criteria and methodological choices that make ACLED ",
+                "reliable for its intended purposes also cause it to miss a large share of protest activity, ",
+                "much as Scott’s fiscal forestry missed everything that could not be converted into revenue estimates."),
+              tags$p(tags$strong("Organizational Resources (Almeida, Lune): "),
+                "Almeida argues that social movements are more likely to emerge from preexisting organizations because ",
+                "these provide recognized leaders, communication channels, and the capacity for bloc recruitment, ",
+                "where entire segments of an organization are drawn into a movement at once rather than individuals ",
+                "being recruited one by one. He distinguishes between activist organizations (SMOs) created explicitly ",
+                "for collective action and everyday organizations (schools, churches, unions) that can be mobilized ",
+                "under special circumstances. Lune extends this by showing that organizational fields contain multiple ",
+                "types of groups that support each other even when pursuing different short-term goals, and that the ",
+                "broader ecology of organizations in a field shapes the capacity for collective action. ",
+                "In this data, the roughly 100,000 events with at least one named organization average 2.03 media ",
+                "sources per event, compared to 1.60 for the approximately 38,000 events without an organization listed. ",
+                "The Top 15 Organizations chart shows which specific groups are associated with the highest average ",
+                "coverage. However, both groups share a median of 1 source, meaning the difference in averages is driven ",
+                "by a subset of higher-visibility events within the organized category, and about 28% of events have no ",
+                "organization listed, which may reflect missing data rather than the absence of organizational involvement."),
+              tags$p(tags$strong("Political Opportunity Structure (Meyer, Tilly): "),
+                "Meyer argues that external political conditions, such as elections, court decisions, and shifts in ",
+                "government composition, shape when movements emerge and when their claims gain traction. Tilly defines ",
+                "social movements as a distinct form of contentious politics, and his historical analysis shows that ",
+                "the rise and fall of movement activity tracks changes in political context. The Coverage Over Time tab ",
+                "shows this pattern directly: protest volume spikes sharply around specific political moments, including ",
+                "the Roe v. Wade leak (May 2022), the Dobbs decision (June 2022), midterm election mobilization ",
+                "(October 2022), the October 7 anniversary and Gaza solidarity protests (October 2023), and the ",
+                "Columbia encampment (April 2024). These are not gradual trends but sudden increases tied to specific ",
+                "external events, consistent with Meyer’s argument that political conditions create windows of ",
+                "opportunity that movements respond to.")
+            )
           )
-        )
+        ),
       ),
 
       tabItem(tabName = "gap",
@@ -292,7 +331,9 @@ ui <- dashboardPage(
             title = "Where Does Media Cover Protests?",
             status = "primary", solidHeader = TRUE, width = 12,
             p("Each point is a protest event. Point size reflects the number of media sources ",
-              "that reported on that event. Larger points received more media coverage.",
+              "that reported on that event. Larger points received more media coverage. ",
+              "For performance, a random sample of up to 10,000 events is displayed when the filtered dataset exceeds that number. ",
+              "Because the sample is proportional, rare event types (such as online events) may appear less frequently than when filtering to that category directly.",
               style = desc_style),
             withSpinner(leafletOutput("protest_map", height = "540px"), type = 6, color = "#2980b9"),
             hr(),
@@ -307,9 +348,10 @@ ui <- dashboardPage(
             selectInput("coverage_chart", "Select Visualization:",
               choices = c(
                 "How Concentrated Is Visibility?" = "visibility_dist",
+                "What Share of Each Issue Gets Minimal Coverage?" = "coverage_level_issue",
                 "Average Media Sources by Issue" = "issue_mean",
                 "Distribution of Media Sources by Issue" = "issue_box",
-                "Coverage by Detailed Issue Combination" = "sub_issues",
+                "Which Specific Issue Pairings Get More Coverage?" = "sub_issues",
                 "Average Media Sources by Event Type (Top 10)" = "trait_type",
                 "Media Coverage: Arrests and Property Damage" = "trait_arrest_damage",
                 "Media Coverage: Organizations" = "trait_orgs",
@@ -335,6 +377,20 @@ ui <- dashboardPage(
                 "and fewer than 6% receive coverage from five or more outlets.",
                 style = desc_style),
               withSpinner(plotlyOutput("visibility_dist_plot", height = "420px"), type = 6, color = "#2980b9")
+            )
+          )
+        ),
+        conditionalPanel(
+          condition = "input.coverage_chart == 'coverage_level_issue'",
+          fluidRow(
+            box(
+              title = "Coverage Level Breakdown by Issue",
+              status = "primary", solidHeader = TRUE, width = 12,
+              p("What percentage of events in each issue category fall into each coverage level? ",
+                "Categories with a larger share of single-source events have less media visibility overall. ",
+                "Click a coverage level in the legend to isolate it.",
+                style = desc_style),
+              withSpinner(plotlyOutput("coverage_level_issue_plot", height = "480px"), type = 6, color = "#2980b9")
             )
           )
         ),
@@ -651,7 +707,7 @@ ui <- dashboardPage(
                 tags$tr(tags$td("date"), tags$td("Date"), tags$td("Date of the protest event")),
                 tags$tr(tags$td("state"), tags$td("Text"), tags$td("U.S. state where the event occurred")),
                 tags$tr(tags$td("locality"), tags$td("Text"), tags$td("City or locality name")),
-                tags$tr(tags$td("lat / lon"), tags$td("Numeric"), tags$td("Geographic coordinates")),
+                tags$tr(tags$td("lat/lon"), tags$td("Numeric"), tags$td("Geographic coordinates")),
                 tags$tr(tags$td("event_type"), tags$td("Text"),
                         tags$td("Type of protest action (e.g., rally, march, demonstration)")),
                 tags$tr(tags$td("main_issue"), tags$td("Text"),
@@ -672,6 +728,55 @@ ui <- dashboardPage(
                 tags$tr(tags$td("valence"), tags$td("Integer"),
                         tags$td("Coded valence of the event (0, 1, or 2)"))
               )
+            ),
+            hr(),
+            h4("Variable Definitions (ACLED)"),
+            tags$table(class = "table table-striped table-bordered",
+              tags$thead(tags$tr(tags$th("Variable"), tags$th("Type"), tags$th("Description"))),
+              tags$tbody(
+                tags$tr(tags$td("week"), tags$td("Date"),
+                        tags$td("Start date of the week in which events were aggregated")),
+                tags$tr(tags$td("event_type"), tags$td("Text"),
+                        tags$td("Broad event category (e.g., Protests, Strategic developments). ",
+                                "Filtered to Protests for comparison with CCC.")),
+                tags$tr(tags$td("sub_event_type"), tags$td("Text"),
+                        tags$td("More specific event classification within the event type ",
+                                "(e.g., Peaceful protest, Protest with intervention)")),
+                tags$tr(tags$td("acled_events"), tags$td("Integer"),
+                        tags$td("Number of events recorded by ACLED for that week, event type, and sub-event type"))
+              )
+            ),
+            hr(),
+            h4("Data Considerations and Limitations"),
+            tags$ul(
+              tags$li(tags$strong("Geographic scope: "), "The CCC dataset covers only U.S. protest events. ",
+                      "International protests, including those in U.S. territories other than Washington D.C., ",
+                      "may not be consistently recorded."),
+              tags$li(tags$strong("Time period: "), "The dashboard covers January 2021 through December 2024. ",
+                      "Patterns observed here may not generalize to earlier periods, particularly before the COVID-19 pandemic ",
+                      "altered protest tactics and media environments."),
+              tags$li(tags$strong("Media source count vs. reach: "), "The ", tags$code("n_sources"), " variable counts ",
+                      "the number of distinct media outlets that covered an event, not the size or reach of those outlets. ",
+                      "An event covered by one national outlet (e.g., the New York Times) and an event covered by one local ",
+                      "newspaper both register as n_sources = 1, despite very different audience sizes."),
+              tags$li(tags$strong("Protest size data: "), "Approximately 66% of events have no recorded protest size ",
+                      "(size_cat = 0). The protest size vs. coverage chart is based on the roughly one-third of events ",
+                      "where size was reported, which may skew toward larger or more visible events."),
+              tags$li(tags$strong("Organization data: "), "About 28% of events have no organization listed. ",
+                      "The organized vs. unorganized comparison treats missing organization data as unorganized, ",
+                      "which may overcount that category if the organization was simply not recorded."),
+              tags$li(tags$strong("Online events: "), "Only 389 events (0.28%) are classified as online. ",
+                      "This sample is too small to draw strong conclusions about differences in coverage between ",
+                      "online and in-person events."),
+              tags$li(tags$strong("Retroactive compilation: "), "CCC is compiled by researchers after the fact, ",
+                      "not recorded in real time. Events may be added or updated as new sources are discovered, ",
+                      "meaning the dataset reflects what researchers eventually found rather than what was immediately visible."),
+              tags$li(tags$strong("Map sampling: "), "The spatial coverage map displays a random sample of up to ",
+                      "10,000 events when the filtered dataset exceeds that number. Proportionally rare event types ",
+                      "may appear less frequently in the sampled view than when filtered directly."),
+              tags$li(tags$strong("ACLED comparison: "), "ACLED and CCC use different event definitions, coding rules, ",
+                      "and source methodologies. The weekly comparison shows directional differences in event counts but ",
+                      "does not imply that one dataset is more accurate than the other.")
             )
           )
         )
@@ -749,6 +854,26 @@ server <- function(input, output, session) {
     }
   }, ignoreInit = TRUE)
 
+  prev_geo <- reactiveVal("all")
+  observeEvent(input$geography, {
+    sel <- input$geography
+    old <- prev_geo()
+    if (is.null(sel) || length(sel) == 0) {
+      updateCheckboxGroupInput(session, "geography", selected = "all")
+      prev_geo("all")
+    } else if (length(sel) > 1 && "all" %in% sel) {
+      if (!("all" %in% old)) {
+        updateCheckboxGroupInput(session, "geography", selected = "all")
+        prev_geo("all")
+      } else {
+        updateCheckboxGroupInput(session, "geography", selected = setdiff(sel, "all"))
+        prev_geo(setdiff(sel, "all"))
+      }
+    } else {
+      prev_geo(sel)
+    }
+  }, ignoreInit = TRUE)
+
   filtered_result <- reactiveVal(CCC_DATA)
 
   observeEvent(input$apply_filters, {
@@ -772,13 +897,12 @@ server <- function(input, output, session) {
     }
 
     if (!is.null(input$geography) && !("all" %in% input$geography)) {
-      if ("online" %in% input$geography) {
-        result <- result |> dplyr::filter(online == 1)
-      } else if ("urban" %in% input$geography && !("rural" %in% input$geography)) {
-        result <- result |> dplyr::filter(urban == TRUE)
-      } else if ("rural" %in% input$geography && !("urban" %in% input$geography)) {
-        result <- result |> dplyr::filter(urban == FALSE)
-      }
+      geo_sel <- input$geography
+      keep <- rep(FALSE, nrow(result))
+      if ("urban" %in% geo_sel)  keep <- keep | (result$urban == TRUE & result$online != 1)
+      if ("rural" %in% geo_sel)  keep <- keep | (result$urban == FALSE & result$online != 1)
+      if ("online" %in% geo_sel) keep <- keep | (result$online == 1)
+      result <- result[keep, ]
     }
 
     message("[filter] Applied filters -> ", nrow(result), " rows ",
@@ -856,7 +980,7 @@ server <- function(input, output, session) {
     total_acled <- sum(gd$acled_protests, na.rm = TRUE)
     weeks_ccc_more  <- sum(gd$diff > 0, na.rm = TRUE)
     weeks_acled_more <- sum(gd$diff < 0, na.rm = TRUE)
-    pct_more <- round((total_ccc - total_acled) / total_acled * 100, 1)
+    pct_more <- round((total_ccc - total_acled)/total_acled * 100, 1)
 
     paste0(
       "Overlapping period: ", format(min(overlap$week), "%b %Y"),
@@ -876,7 +1000,10 @@ server <- function(input, output, session) {
     d <- filtered_data()
     req(d)
     coords <- d |> dplyr::filter(!is.na(lat), !is.na(lon))
-    if (nrow(coords) > 10000) coords <- coords[sample(nrow(coords), 10000), ]
+    if (nrow(coords) > 10000) {
+      set.seed(42)
+      coords <- coords[sample(nrow(coords), 10000), ]
+    }
 
     leaflet() |>
       addProviderTiles(providers$CartoDB.Positron) |>
@@ -898,7 +1025,7 @@ server <- function(input, output, session) {
       addLegend(
         position = "bottomright",
         colors = c(COL$blue, COL$red),
-        labels = c("In-person", "Online / Virtual"),
+        labels = c("In-person", "Online/Virtual"),
         title = "Event Type",
         opacity = 0.8
       )
@@ -1104,11 +1231,11 @@ server <- function(input, output, session) {
       dplyr::mutate(
         valence_label = dplyr::case_when(
           valence == 0 ~ "Left-leaning",
-          valence == 1 ~ "Neutral / Unclassified",
+          valence == 1 ~ "Neutral/Unclassified",
           valence == 2 ~ "Right-leaning"
         ),
         valence_label = factor(valence_label, levels = c("Left-leaning",
-                                                          "Neutral / Unclassified",
+                                                          "Neutral/Unclassified",
                                                           "Right-leaning"))
       )
 
@@ -1125,7 +1252,7 @@ server <- function(input, output, session) {
       )
 
     colors <- c("Left-leaning" = COL$blue,
-                "Neutral / Unclassified" = COL$gray,
+                "Neutral/Unclassified" = COL$gray,
                 "Right-leaning" = COL$red)
 
     plot_ly() |>
@@ -1184,8 +1311,8 @@ server <- function(input, output, session) {
       dplyr::count(n_sources) |>
       dplyr::arrange(n_sources) |>
       dplyr::mutate(
-        pct = round(n / sum(n) * 100, 1),
-        cum_pct = round(cumsum(n) / sum(n) * 100, 1)
+        pct = round(n/sum(n) * 100, 1),
+        cum_pct = round(cumsum(n)/sum(n) * 100, 1)
       )
 
     plot_ly(dist, x = ~n_sources) |>
@@ -1227,6 +1354,65 @@ server <- function(input, output, session) {
         )
       ) |>
       plotly::config(displayModeBar = FALSE)
+  })
+
+
+  output$coverage_level_issue_plot <- renderPlotly({
+    d <- filtered_data(); req(d, nrow(d) > 0)
+
+    level_labels <- c("1 source", "2 sources", "3-4 sources", "5+ sources")
+    level_colors <- c("#c0392b", "#e67e22", "#2980b9", "#27ae60")
+
+    issue_levels <- d |>
+      dplyr::filter(!is.na(main_issue)) |>
+      dplyr::mutate(
+        coverage_level = factor(dplyr::case_when(
+          n_sources == 1 ~ "1 source",
+          n_sources == 2 ~ "2 sources",
+          n_sources <= 4 ~ "3-4 sources",
+          TRUE ~ "5+ sources"
+        ), levels = level_labels)
+      ) |>
+      dplyr::count(main_issue, coverage_level) |>
+      dplyr::group_by(main_issue) |>
+      dplyr::mutate(
+        total = sum(n),
+        pct = round(n / total * 100, 1)
+      ) |>
+      dplyr::ungroup()
+
+    issue_order <- issue_levels |>
+      dplyr::filter(coverage_level == "1 source") |>
+      dplyr::arrange(desc(pct)) |>
+      dplyr::pull(main_issue)
+
+    issue_levels$main_issue <- factor(issue_levels$main_issue, levels = rev(issue_order))
+
+    p <- plot_ly()
+    for (i in seq_along(level_labels)) {
+      lev <- level_labels[i]
+      sub <- issue_levels |> dplyr::filter(coverage_level == lev)
+      p <- p |> add_bars(
+        data = sub,
+        y = ~main_issue, x = ~pct, name = lev,
+        marker = list(color = level_colors[i]),
+        orientation = "h",
+        hovertemplate = paste0("<b>%{y}</b><br>",
+                               lev, ": %{x:.1f}%<br>",
+                               "Events: ", sub$n, "<extra></extra>")
+      )
+    }
+
+    p |> plotly::layout(
+      barmode = "stack",
+      xaxis = list(title = "Percentage of Events", ticksuffix = "%", range = c(0, 105)),
+      yaxis = list(title = ""),
+      legend = list(orientation = "h", x = 0.2, y = 1.08, traceorder = "normal"),
+      font = list(family = "Helvetica Neue, Arial, sans-serif"),
+      hoverlabel = list(bgcolor = "white", font = list(size = 12)),
+      plot_bgcolor = "white", paper_bgcolor = "white",
+      margin = list(l = 150)
+    ) |> plotly::config(displayModeBar = FALSE)
   })
 
 
@@ -1562,15 +1748,15 @@ server <- function(input, output, session) {
       dplyr::left_join(issue_lookup |> dplyr::select(week, main_issue), by = "week") |>
       dplyr::mutate(
         label = dplyr::case_when(
-          week == as.Date("2021-09-26") ~ "Women's March / Reproductive Rights",
+          week == as.Date("2021-09-26") ~ "Women's March/Reproductive Rights",
           week == as.Date("2022-01-16") ~ "Vaccine Mandate Protests",
           week == as.Date("2022-05-08") ~ "Roe v. Wade Leak Response",
           week == as.Date("2022-06-19") ~ "Post-Dobbs Mobilization",
-          week == as.Date("2022-10-02") ~ "National Life Chain / Midterm Push",
-          week == as.Date("2023-10-08") ~ "October 7 / Gaza Solidarity",
+          week == as.Date("2022-10-02") ~ "National Life Chain/Midterm Push",
+          week == as.Date("2023-10-08") ~ "October 7/Gaza Solidarity",
           week == as.Date("2024-02-25") ~ "Gaza Ceasefire Protests",
-          week == as.Date("2024-04-28") ~ "Columbia Encampment / Gaza",
-          week == as.Date("2024-10-06") ~ "Gaza Anniversary / Election",
+          week == as.Date("2024-04-28") ~ "Columbia Encampment/Gaza",
+          week == as.Date("2024-10-06") ~ "Gaza Anniversary/Election",
           main_issue == "Other" ~ "Mixed-Issue Mobilization",
           TRUE ~ paste0(main_issue, " Protests")
         )
@@ -1673,7 +1859,7 @@ server <- function(input, output, session) {
     if (!is.null(CCC_DATA)) {
       arr_yes <- mean(CCC_DATA$n_sources[CCC_DATA$arrests == 1], na.rm = TRUE)
       arr_no <- mean(CCC_DATA$n_sources[CCC_DATA$arrests == 0], na.rm = TRUE)
-      valueBox(paste0(round(arr_yes / arr_no, 1), "x"), "Coverage Multiplier: Arrests",
+      valueBox(paste0(round(arr_yes/arr_no, 1), "x"), "Coverage Multiplier: Arrests",
                icon = icon("gavel"), color = "red")
     } else valueBox("N/A", "Coverage Multiplier: Arrests", icon = icon("gavel"), color = "red")
   })
@@ -1683,7 +1869,7 @@ server <- function(input, output, session) {
       has_org <- CCC_DATA$organizations != "" & !is.na(CCC_DATA$organizations)
       org_yes <- mean(CCC_DATA$n_sources[has_org], na.rm = TRUE)
       org_no <- mean(CCC_DATA$n_sources[!has_org], na.rm = TRUE)
-      valueBox(paste0(round(org_yes / org_no, 1), "x"), "Coverage Multiplier: Organizations",
+      valueBox(paste0(round(org_yes/org_no, 1), "x"), "Coverage Multiplier: Organizations",
                icon = icon("users"), color = "green")
     } else valueBox("N/A", "Coverage Multiplier: Organizations", icon = icon("users"), color = "green")
   })
@@ -1693,7 +1879,7 @@ server <- function(input, output, session) {
       small_avg <- mean(CCC_DATA$n_sources[CCC_DATA$size_cat == 1 & !is.na(CCC_DATA$size_cat)], na.rm = TRUE)
       large_avg <- mean(CCC_DATA$n_sources[CCC_DATA$size_cat == 4 & !is.na(CCC_DATA$size_cat)], na.rm = TRUE)
       if (!is.na(small_avg) && small_avg > 0 && !is.na(large_avg)) {
-        valueBox(paste0(round(large_avg / small_avg, 1), "x"), "Coverage: Very Large vs Small",
+        valueBox(paste0(round(large_avg/small_avg, 1), "x"), "Coverage: Very Large vs Small",
                  icon = icon("signal"), color = "purple")
       } else valueBox("N/A", "Coverage: Very Large vs Small", icon = icon("signal"), color = "purple")
     } else valueBox("N/A", "Coverage: Very Large vs Small", icon = icon("signal"), color = "purple")
@@ -1704,7 +1890,7 @@ server <- function(input, output, session) {
       urban_avg <- mean(CCC_DATA$n_sources[CCC_DATA$urban == TRUE], na.rm = TRUE)
       rural_avg <- mean(CCC_DATA$n_sources[CCC_DATA$urban == FALSE], na.rm = TRUE)
       if (!is.na(rural_avg) && rural_avg > 0 && !is.na(urban_avg)) {
-        valueBox(paste0(round(urban_avg / rural_avg, 1), "x"), "Coverage: Urban vs Rural",
+        valueBox(paste0(round(urban_avg/rural_avg, 1), "x"), "Coverage: Urban vs Rural",
                  icon = icon("building"), color = "teal")
       } else valueBox("N/A", "Coverage: Urban vs Rural", icon = icon("building"), color = "teal")
     } else valueBox("N/A", "Coverage: Urban vs Rural", icon = icon("building"), color = "teal")
@@ -1714,7 +1900,7 @@ server <- function(input, output, session) {
     if (is.null(gap_data) || nrow(gap_data) == 0) return(p("Comparison data not loaded."))
     total_ccc <- sum(gap_data$ccc_events, na.rm = TRUE)
     total_acled <- sum(gap_data$acled_protests, na.rm = TRUE)
-    pct_more <- round((total_ccc - total_acled) / total_acled * 100, 1)
+    pct_more <- round((total_ccc - total_acled)/total_acled * 100, 1)
     weeks_more <- sum(gap_data$diff > 0, na.rm = TRUE)
     total_weeks <- nrow(gap_data)
 
