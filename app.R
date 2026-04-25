@@ -84,8 +84,8 @@ filter_panel <- fluidRow(
     column(2, selectInput("event_types", "Event Type", choices = "All", multiple = TRUE)),
     column(3,
       checkboxGroupInput("geography", "Location",
-                        choices = c("Urban" = "urban", "Rural" = "rural",
-                                    "Online only" = "online", "All" = "all"),
+                        choices = c("All" = "all", "Urban" = "urban",
+                                    "Rural" = "rural", "Online" = "online"),
                         selected = "all", inline = TRUE)
     ),
     column(2,
@@ -195,7 +195,7 @@ ui <- dashboardPage(
               "cover each one, and ",
               tags$strong("ACLED"),
               " (Armed Conflict Location & Event Data Project), an expert-curated dataset used by researchers ",
-              "and policymakers. The CCC's media source count is the primary measure of visibility throughout ",
+              "and policymakers. The CCC\u2019s media source count is the primary measure of visibility throughout ",
               "this dashboard. The comparison between CCC and ACLED reveals a persistent gap between ",
               "protests that occur and those that enter institutional records. ",
               "Across over 138,000 events, the findings below show that which protests become ",
@@ -247,42 +247,75 @@ ui <- dashboardPage(
             width = 12, status = "primary",
             tags$div(style = "line-height: 1.8; font-size: 0.93em; color: #333;",
               tags$p(tags$strong("Legibility (Scott): "),
-                "Scott argues that institutions make complex realities governable by imposing ", tags$em("legibility schemes"),
-                "—simplified, standardized categories that render a phenomenon measurable and manipulable. ",
-                "This process requires what he calls a ", tags$em("narrowing of vision"),
-                ": the scheme brings certain features into sharp focus while everything outside its frame becomes invisible. ",
+                "Scott argues that institutions make complex realities governable by imposing ", tags$em("legibility schemes,"),
+                " simplified, standardized categories that render a phenomenon measurable and manipulable. ",
+                "This process requires what he calls a ", tags$em("narrowing of vision:"),
+                " the scheme brings certain features into sharp focus while everything outside its frame becomes invisible. ",
                 "The CCC vs. ACLED Comparison tab shows a pattern consistent with this framework: during their overlapping ",
                 "coverage period, the CCC records over 126% more protest events than ACLED in 311 of 323 weeks. ACLED is ",
                 "the dataset that researchers and policymakers use to inform decisions about political events. Its coding ",
-                "criteria function as a legibility scheme—they determine which protests enter institutional records and ",
+                "criteria function as a legibility scheme, determining which protests enter institutional records and ",
                 "which do not. The persistent gap suggests that the methodological choices that make ACLED reliable for its ",
                 "purposes also produce systematic blind spots, excluding protests that do not meet its threshold criteria."),
-              tags$p(tags$strong("Organizational Resources (Almeida, Lune): "),
-                "Almeida argues that social movements are more likely to emerge from preexisting organizations because ",
-                "these provide recognized leaders, communication channels, and the capacity for bloc recruitment, ",
-                "where entire segments of an organization are drawn into a movement at once rather than individuals ",
-                "being recruited one by one. He distinguishes between activist organizations (SMOs) created explicitly ",
-                "for collective action and everyday organizations (schools, churches, unions) that can be mobilized ",
-                "under special circumstances. Lune extends this by showing that organizational fields contain multiple ",
-                "types of groups that support each other even when pursuing different short-term goals, and that the ",
-                "broader ecology of organizations in a field shapes the capacity for collective action. ",
+              tags$p(tags$strong("Framing and Organizational Resources (Almeida, Lune, Snow & Soule): "),
+                "Almeida identifies three types of frames that movements construct: ", tags$em("diagnostic frames"),
+                " (identifying a problem), ", tags$em("prognostic frames"),  " (proposing solutions), and ",
+                tags$em("motivational frames"),  " (compelling people to act). These frames are conveyed through ",
+                "\u201cmovement documents and press, public demonstrations, statements by leaders, and mass media ",
+                "presentations\u201d (Almeida). Snow and Soule extend this by identifying media as an active ",
+                tags$em("framing actor"),  " alongside \u201cadversaries, institutional elites, [and] countermovements,\u201d ",
+                "meaning media organizations do not simply transmit movement messages but reshape them. ",
+                "Almeida also argues that movements emerge more readily from preexisting organizations that provide ",
+                "recognized leaders, communication channels, and the capacity for ", tags$em("bloc recruitment."),
+                " Lune extends this through the concept of ", tags$em("organizational fields,"),
+                " where multiple types of groups support each other even when pursuing different short-term goals. ",
                 "In this data, the roughly 100,000 events with at least one named organization average 2.03 media ",
                 "sources per event, compared to 1.60 for the approximately 38,000 events without an organization listed. ",
-                "The Top 15 Organizations chart shows which specific groups are associated with the highest average ",
-                "coverage. However, both groups share a median of 1 source, meaning the difference in averages is driven ",
+                "However, both groups share a median of 1 source, meaning the difference in averages is driven ",
                 "by a subset of higher-visibility events within the organized category, and about 28% of events have no ",
                 "organization listed, which may reflect missing data rather than the absence of organizational involvement."),
-              tags$p(tags$strong("Political Opportunity Structure (Meyer, Tilly): "),
-                "Meyer argues that external political conditions, such as elections, court decisions, and shifts in ",
-                "government composition, shape when movements emerge and when their claims gain traction. Tilly defines ",
-                "social movements as a distinct form of contentious politics, and his historical analysis shows that ",
-                "the rise and fall of movement activity tracks changes in political context. The Coverage Over Time tab ",
-                "shows this pattern directly: protest volume spikes sharply around specific political moments, including ",
-                "the Roe v. Wade leak (May 2022), the Dobbs decision (June 2022), midterm election mobilization ",
-                "(October 2022), the October 7 anniversary and Gaza solidarity protests (October 2023), and the ",
-                "Columbia encampment (April 2024). These are not gradual trends but sudden increases tied to specific ",
-                "external events, consistent with Meyer’s argument that political conditions create windows of ",
-                "opportunity that movements respond to.")
+              tags$p(tags$strong("Political Opportunity and Media Dynamics (Meyer, Meyer & Staggenborg, Tilly): "),
+                "Meyer argues that ", tags$em("political opportunity structures"),
+                " shape when movements gain traction: \u201cthere are always activists trying to call attention to a variety ",
+                "of issues\u2026 but only sometimes are they able to win broader public attention\u201d (Meyer 2007). ",
+                "Tilly defines social movements as a distinct form of contentious politics whose activity tracks ",
+                "changes in political context, with \u201cstatements to and in public media\u201d as part of the social movement ",
+                "repertoire. The Coverage Over Time tab shows this pattern: protest volume spikes sharply around specific ",
+                "political moments, including the Roe v. Wade leak (May 2022), the Dobbs decision (June 2022), midterm ",
+                "election mobilization (October 2022), and Gaza solidarity protests (October 2023). These are sudden ",
+                "increases tied to specific external events, consistent with Meyer\u2019s framework. ",
+                "Meyer and Staggenborg (1996) add that media coverage itself shapes movement dynamics. Their Proposition 5 ",
+                "states: \u201cMass media coverage encourages the emergence of a countermovement as journalists seek out ",
+                "opposing interests in response to movement claims.\u201d They argue that ", tags$em("the balancing norm"),
+                " in journalism \u201cleads to coverage that emphasizes conflict, rather than content,\u201d meaning media ",
+                "attention is not neutral but actively structures how movements and countermovements interact.")
+            )
+          )
+        ),
+        tags$h4("Extended Analysis: Regression and Keyword Results",
+          style = "margin: 15px 0 10px 15px; color: #2c3e50; font-weight: 600;"),
+        fluidRow(
+          box(
+            width = 12, status = "primary",
+            tags$div(style = "line-height: 1.8; font-size: 0.93em; color: #333;",
+              tags$p(tags$strong("Regression Model: "),
+                "A negative binomial regression controlling for all factors simultaneously confirms that the strongest ",
+                "predictors of media coverage are protest size (very large events receive 5.5x more sources than unknown-size events, ",
+                "IRR = 5.47), arrests (2.6x, IRR = 2.57), and property damage (1.4x, IRR = 1.37). Organizational presence ",
+                "is also significant (IRR = 1.25), as is urban setting (IRR = 1.01), though the urban effect is small. ",
+                "Right-leaning protests receive slightly less coverage than left-leaning ones (IRR = 0.96), and neutral/unknown ",
+                "valence events receive less still. Among issue categories, Policing receives modestly more coverage than the ",
+                "baseline (the “Other” category, which includes the largest share of events at 44,000+), while Foreign Affairs ",
+                "receives less despite being the second-largest category. ",
+                "These results confirm the individual patterns visible in the charts above while controlling for confounding: ",
+                "size and disruption (arrests, property damage) are the strongest drivers, organizational presence provides a ",
+                "modest boost, and issue category and political valence have smaller but statistically significant effects."),
+              tags$p(tags$strong("Keyword Analysis: "),
+                "The keyword analysis of protest claims shows that terms tied to labor disputes (\u2018industrial,\u2019 \u2018manufacturing,\u2019 ",
+                "\u2018layoffs,\u2019 \u2018contract\u2019) and political figures (\u2018biden,\u2019 \u2018trump\u2019) associate with above-average coverage, ",
+                "while routine or repetitive campaign terms associate with below-average coverage. These patterns are consistent ",
+                "with Meyer and Staggenborg\u2019s argument that media attention gravitates toward conflict and with Snow and Soule\u2019s ",
+                "observation that media actively reshapes which movement claims become visible.")
             )
           )
         ),
@@ -520,8 +553,8 @@ ui <- dashboardPage(
               title = "Does Repression Amplify Visibility?",
               status = "primary", solidHeader = TRUE, width = 12,
               p("Average media sources for protests grouped by whether arrests and/or property damage ",
-                "were reported. Events involving both forms of repression receive dramatically more ",
-                "coverage, suggesting that state responses and disruption make protests more legible to media.",
+                "were reported. Events involving both tend to receive higher ",
+                "coverage, suggesting that state responses and disruption are associated with greater media attention.",
                 style = desc_style),
               withSpinner(plotlyOutput("repression_plot", height = "380px"), type = 6, color = "#2980b9")
             )
@@ -551,10 +584,10 @@ ui <- dashboardPage(
               title = "Does Protest Size Drive Media Coverage?",
               status = "primary", solidHeader = TRUE, width = 12,
               p("Average media sources per event by protest size category. ",
-                "Larger protests receive dramatically more media coverage than smaller ones. ",
-                "This directly supports the resource mobilization argument: movements that can ",
+                "Larger protests tend to receive more media coverage than smaller ones. ",
+                "This is consistent with the resource mobilization argument: movements that can ",
                 "mobilize more people (which requires organizational resources, infrastructure, ",
-                "and coordination) become far more visible to media. Size data is available for ",
+                "and coordination) tend to be more visible to media. Size data is available for ",
                 "about one-third of all events.",
                 style = desc_style),
               withSpinner(plotlyOutput("size_coverage_plot", height = "420px"), type = 6, color = "#2980b9")
@@ -712,8 +745,10 @@ ui <- dashboardPage(
               p("A negative binomial regression modeling media source count from issue category, ",
                 "organizational presence, arrests, property damage, protest size, political valence, and urban/rural setting. ",
                 "Negative binomial is appropriate because media coverage is count data with overdispersion (variance exceeds the mean). ",
-                "Results are shown as incidence rate ratios (IRRs): values above 1 mean more coverage, below 1 mean less. ",
-                "For example, an IRR of 2.0 means events with that characteristic receive twice as many media sources. ",
+                "Results are shown as incidence rate ratios (IRRs): values above 1 mean more coverage than the baseline category, ",
+                "below 1 mean less. Baselines: ", tags$em("Other"), " issue (44,000+ events), no organization, no arrests, ",
+                "no property damage, unknown size, left-leaning valence, rural setting. ",
+                "For example, an IRR of 2.0 means events with that characteristic receive twice as many media sources as the baseline. ",
                 "Blue points are statistically significant (p < 0.05); gray points are not.",
                 style = desc_style),
               withSpinner(plotlyOutput("regression_coef_plot", height = "520px"), type = 6, color = "#2980b9")
@@ -804,7 +839,13 @@ ui <- dashboardPage(
                 tags$tr(tags$td("property_damage"), tags$td("Binary (0/1)"),
                         tags$td("1 = property damage reported, 0 = none")),
                 tags$tr(tags$td("valence"), tags$td("Integer"),
-                        tags$td("Coded valence of the event (0, 1, or 2)"))
+                        tags$td("Coded valence of the event (0 = left-leaning, 1 = neutral/mixed, 2 = right-leaning)")),
+                tags$tr(tags$td("size_cat"), tags$td("Integer (0-4)"),
+                        tags$td("Protest size category (0 = unknown/not reported, 1 = small, 2 = medium, ",
+                                "3 = large, 4 = very large). Approximately 66% of events are coded 0.")),
+                tags$tr(tags$td("claims_summary"), tags$td("Text"),
+                        tags$td("Semicolon-separated summary of protester claims. Used in the Extended Analysis ",
+                                "keyword analysis to identify which terms associate with higher or lower coverage."))
               )
             ),
             hr(),
@@ -2038,10 +2079,10 @@ server <- function(input, output, session) {
     total_weeks <- nrow(gap_data)
 
     tags$ul(style = "line-height: 2; font-size: 0.93em; padding-left: 18px;",
-      tags$li(HTML(paste0("The CCC records <strong>", abs(pct_more), "%</strong> more protest events than ACLED's expert-curated dataset during their overlapping coverage period."))),
+      tags$li(HTML(paste0("The CCC records <strong>", abs(pct_more), "%</strong> more protest events than ACLED\u2019s expert-curated dataset during their overlapping coverage period."))),
       tags$li(HTML(paste0("CCC captures more events than ACLED in <strong>", weeks_more, " of ", total_weeks, "</strong> overlapping weeks, demonstrating a persistent and systematic gap."))),
       tags$li("This gap represents protests that remain politically invisible to the institutions that rely on curated data to understand civil society."),
-      tags$li("Visibility is the prerequisite for institutional response, because what is not recorded cannot be acted upon.")
+      tags$li("This gap raises questions about which protests shape institutional understanding of civil society and which remain outside the frame.")
     )
   })
 
@@ -2061,7 +2102,7 @@ server <- function(input, output, session) {
       tags$li(HTML(paste0("Events where arrests were reported average <strong>", arr_yes, "</strong> media sources, compared to <strong>", arr_no, "</strong> for events without arrests."))),
       tags$li(HTML(paste0("Events with property damage average <strong>", dmg_yes, "</strong> sources, compared to <strong>", dmg_no, "</strong> for events without damage."))),
       tags$li(HTML(paste0("Events with at least one named organization average <strong>", org_yes, "</strong> sources, compared to <strong>", org_no, "</strong> for unorganized events."))),
-      tags$li("Larger protests receive dramatically more media coverage, confirming that mobilization capacity directly shapes visibility.")
+      tags$li("Larger protests tend to receive more media coverage, suggesting that mobilization capacity is associated with higher visibility.")
     )
   })
 
@@ -2085,7 +2126,7 @@ server <- function(input, output, session) {
       tags$li(HTML(paste0("The highest-covered issue category is <strong>", top_issue, "</strong> with <strong>", top_val, "</strong> average media sources per event."))),
       tags$li(HTML(paste0("The lowest-covered issue category is <strong>", bot_issue, "</strong> with <strong>", bot_val, "</strong> average media sources per event."))),
       tags$li(HTML(paste0("Left-leaning protests average <strong>", val_left, "</strong> sources per event, compared to <strong>", val_right, "</strong> for right-leaning protests."))),
-      tags$li("Protest volume spikes around key political moments, reflecting how political opportunity structures open windows of increased visibility.")
+      tags$li("Protest volume spikes around key political moments such as the Dobbs decision and Gaza solidarity protests, consistent with Meyer\u2019s argument that political conditions create windows where movements gain broader attention.")
     )
   })
 
@@ -2227,8 +2268,8 @@ server <- function(input, output, session) {
         make_row("Observations", scales::comma(g$nobs))
       ),
       tags$p(style = "margin-top: 12px; color: #555; font-size: 0.9em;",
-        "Reference categories: most common issue, No Organization, No Arrests, No Property Damage, ",
-        "Unknown Size, Left Valence, Rural Setting. IRR > 1 means more coverage than the reference; IRR < 1 means less.")
+        "Baseline categories (IRR = 1.0): “Other” issue (44,000+ events), No Organization, No Arrests, No Property Damage, ",
+        "Unknown Size, Left-leaning Valence, Rural Setting. IRR > 1 means more coverage than the baseline; IRR < 1 means less.")
     )
   })
 
@@ -2279,7 +2320,9 @@ server <- function(input, output, session) {
                        "used", "new", "one", "two", "first", "last", "long", "great",
                        "old", "right", "high", "end", "well", "way", "even", "back",
                        "still", "going", "keep", "need", "call", "upon", "per", "pro",
-                       "anti", "non", "support", "oppose")
+                       "anti", "non", "support", "oppose",
+                       "beanbucks", "beans", "bean", "flavours", "helpers",
+                       "ingredients", "shredit", "kerry")
 
       overall_mean <- mean(d$n_sources, na.rm = TRUE)
 
