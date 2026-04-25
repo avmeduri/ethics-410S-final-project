@@ -117,7 +117,7 @@ ui <- dashboardPage(
     width = 250,
     sidebarMenu(id = "active_tab",
       menuItem("Key Findings",             tabName = "findings",  icon = icon("lightbulb")),
-      menuItem("CCC vs ACLED Comparison", tabName = "gap",       icon = icon("chart-line")),
+      menuItem("CCC vs. ACLED Comparison", tabName = "gap",       icon = icon("chart-line")),
       menuItem("Spatial Coverage",         tabName = "map",       icon = icon("map")),
       menuItem("What Gets Covered?",       tabName = "coverage",  icon = icon("newspaper")),
       menuItem("Geography of Visibility",  tabName = "geography", icon = icon("globe-americas")),
@@ -1058,7 +1058,7 @@ server <- function(input, output, session) {
       coord_flip() +
       labs(x = NULL, y = "Average Media Sources per Event") +
       plot_theme(base_size = 11)
-    to_plotly(p)
+    to_plotly(p) |> plotly::layout(margin = list(l = 250))
   })
 
 
