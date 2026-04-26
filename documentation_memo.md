@@ -21,8 +21,8 @@ ethics-410S-final-project/
 │   ├── prep_dashboard_data.R                # Core data preparation
 │   └── prep_geographic_media_data.R         # Geographic enrichment
 └── scripts/
-    ├── install_dashboard_deps.R             # Dependency installation
-    └── prep_geographic_media_dashboard.R    # Preprocessing pipeline
+    ├── install_preprocessing_deps.R         # Dependency installation
+    └── preprocessing_pipeline.R             # Preprocessing pipeline
 ```
 
 ## Dashboard Navigation
